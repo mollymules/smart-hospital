@@ -22,3 +22,5 @@ Life cycle of the medical equipment:
 *6.* Waits for the server to connect
 
 *7.* Sends off the results
+
+*8.* resets and returns to a _register_ service
