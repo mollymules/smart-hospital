@@ -3,7 +3,13 @@ import java.io.*;
 import java.net.*;
 import java.util.*;	
 
-
+/*This file will represent a patient
+ * The patient will be a discover service
+ * once it connects with a machine, it checks to see if it needs its services
+ * if it does it connects to the machine 
+ * if not it moves on
+ * the patient is static
+ * should have a bed number perhaps to detect the machines as they are moving around*/
 
 public class Patient {
 	/*This is by Mary*/
