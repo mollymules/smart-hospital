@@ -9,7 +9,8 @@ import java.util.*;
  * if it does it connects to the machine 
  * if not it moves on
  * the patient is static
- * should have a bed number perhaps to detect the machines as they are moving around*/
+ * should have a bed number perhaps to detect the machines as they are moving around
+ * */
 
 public class Patient {
 	/*This is by Mary*/
