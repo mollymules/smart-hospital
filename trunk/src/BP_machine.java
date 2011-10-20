@@ -15,39 +15,55 @@ public class BP_machine implements machine {
 
 	public static final int SERVICE_PORT = 1268;
 	
+	private int patientID = 0;
+	String bp_Result = "";
 		
-	@Override
-	public void getPatient_ID() {
-		// TODO Auto-generated method stub
-		
+	BP_machine (int P_ID){
+		this.patientID = P_ID;
 	}
-
+	
+	public void Patient_ID(int p){
+		this.patientID = p;
+	}
+	
+	public int getPatient_ID(){
+		return patientID;
+	}
+		
+	
 	@Override
 	public boolean has_Patient() {
-		// TODO Auto-generated method stub
+		
+		if(patientID != 0){
+			return true;
+		}
+		
 		return false;
 	}
 
 	@Override
 	public void completeTask() {
-		// TODO Auto-generated method stub
+		// TODO How ever we are going to represent each machine
+	
+		int top_Number = 70 + (int)(Math.random() * ((160 - 70) + 1));
+		int bottem_Number = 50 + (int)(Math.random() * ((100 - 50) + 1));
 		
-	}
-	@Override
-	public void checkList() {
-		// TODO Auto-generated method stub
+		String top_Result = Integer.toString(top_Number);
+		String bottem_Result = Integer.toString(bottem_Number);
 		
+		this.bp_Result = top_Result+ "/"+ bottem_Result;
+	
 	}
-
+	
 	@Override
-	public void getResults() {
-		// TODO Auto-generated method stub
+	public String getResults() {
+		return bp_Result;
 		
 	}
 
 	@Override
 	public void toServer() {
-		// TODO Auto-generated method stub
+		// TODO Send.bp_results; or something like that
 		
 	}
 
@@ -63,7 +79,9 @@ public class BP_machine implements machine {
 	      // service (the last parameter in the following line). For example, it is
 	      // possible to provide a small hashtable which will be attached to the
 	      // registration and is advertised with the service info.
-	      ServiceInfo info = ServiceInfo.create(SERVICE_TYPE, SERVICE_NAME, SERVICE_PORT, 0, 0,"a_property=some_value");
+	      
+		 
+		 ServiceInfo info = ServiceInfo.create(SERVICE_TYPE, SERVICE_NAME, SERVICE_PORT, 0, 0,"a_property=some_value");
 	      jmdns.registerService(info);
 	      System.out.println("Registered Service as " + info); // note that the
 	                                                           // service name may

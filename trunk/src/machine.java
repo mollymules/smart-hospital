@@ -4,20 +4,23 @@ public interface machine {
 	//All Method in an interface are public
 	int P_ID = 0;
 	
-	void getPatient_ID();
+	void Patient_ID(int p);
+	
+	int getPatient_ID();
 	
 	boolean has_Patient();
 	
 	//Completes the specific job for each machine
-	void completeTask();
+	void  completeTask();
 	
 	//cross the task off the list?
-	void checkList();
 	
 	
-	void getResults();
+	
+	String getResults();
 	
 	
 	void toServer();
+
 
 }
