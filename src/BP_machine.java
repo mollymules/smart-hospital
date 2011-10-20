@@ -64,6 +64,7 @@ public class BP_machine implements machine {
 	@Override
 	public void toServer() {
 		// TODO Send.bp_results; or something like that
+		// along with the patientID
 		
 	}
 
