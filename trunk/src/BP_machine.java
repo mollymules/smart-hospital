@@ -17,8 +17,13 @@ public class BP_machine implements machine {
 	public static final String SERVICE_NAME = "BloodPressure";
 
 	public static final int SERVICE_PORT = 1268;
+	
+	
+	
 	String P_ID = null;
 	String Ward = null;
+	
+	
 	public int patientID = 0;
 	String bp_Result = "";
 
