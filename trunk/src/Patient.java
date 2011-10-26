@@ -18,8 +18,8 @@ import javax.jmdns.ServiceListener;
 public class Patient implements Runnable {
 	/* This is by Mary */
 	private int patientID;
-	private String location;
-	private LinkedList<String> tests;
+	private String location;//where the patient is in the hospital
+	private LinkedList<String> tests;//tests the patient needs
 	protected MulticastSocket socket = null;
 	protected InetAddress multicastAddress;
 	protected int multicastPort;
