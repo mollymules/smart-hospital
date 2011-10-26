@@ -1,7 +1,10 @@
 import java.util.LinkedList;
 import java.io.*;
 import java.net.*;
-import java.util.*;	
+import java.util.*;
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceEvent;
+import javax.jmdns.ServiceListener;
 
 /*This file will represent a patient
  * The patient will be a discover service
@@ -12,61 +15,121 @@ import java.util.*;
  * should have a bed number perhaps to detect the machines as they are moving around
  * */
 
-public class Patient {
-	/*This is by Mary*/
+public class Patient implements Runnable {
+	/* This is by Mary */
 	private int patientID;
 	private LinkedList<String> tests;
-	protected MulticastSocket socket = null; 
-    protected InetAddress multicastAddress;
-    protected int multiCastPort;
-	
-	public Patient(){
-		patientID = 3;
+	protected MulticastSocket socket = null;
+	protected InetAddress multicastAddress;
+	protected int multicastPort;
+	boolean noDeviceFound;
+	public static final String SERVICE_TYPE = "smart_hospital._udp.local.";
+
+	public Patient(int patient_id) {
+		patientID = patient_id;
+		noDeviceFound = true;
 	}
-	public LinkedList<String> getTests(){
+
+	public void startBroadcast() {
+		multicastPort = 4444;
+		try {
+			multicastAddress = InetAddress.getByName("230.0.0.1");
+			socket = new MulticastSocket();
+			socket.joinGroup(multicastAddress);
+		} catch (UnknownHostException e1) {
+			e1.printStackTrace();
+		} catch (java.net.SocketException e) {
+			System.out.println("Exception starting server: " + e.getMessage());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		// Continuously broadcast the patient id
+		// until a device comes in range
+		while (noDeviceFound) {
+			send();
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+			}
+		}
+	}
+
+	public void send() {
+		try {
+			String msg = "" + patientID + "";
+			byte[] buf = msg.getBytes();
+			System.out.println(msg);
+			// create the packet to wrap the msg data
+			DatagramPacket packet = new DatagramPacket(buf, buf.length,
+					multicastAddress, multicastPort);
+			socket.send(packet);
+		} catch (IOException e) {
+			e.printStackTrace();
+			// TO-DO: improve by handling this exception
+		}
+	}
+
+	public LinkedList<String> getTests() {
 		return tests;
+	}
+
+	public void run() {
+		startBroadcast();
+	}
+
+
+
+	public void startListner() {
+		// Again, you can specify which network interface you would like to
+		// browse
+		// for services on; see commented line.
+		// final JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
+		JmDNS jmdns;
+		try {
+			jmdns = JmDNS.create();
+			jmdns.addServiceListener(SERVICE_TYPE, new SampleListener());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// Work the magic: this is where the service listener is registered.
 		
+
 	}
 
-
-    public void UDPSender(String multicastGroup,  int multiCastPort) {
-
-	this.multiCastPort = multiCastPort;
-
-	try {
-	  multicastAddress = InetAddress.getByName(multicastGroup);
-	}
-	catch(Throwable t) {
-	}
-
-
-	try {
- 	  socket = new MulticastSocket();
-	  socket.joinGroup(multicastAddress); 
-	}
-	catch (java.net.SocketException e) {
-	  System.out.println("Exception starting server: " + e.getMessage());
-	}
-	catch (IOException e) {     	 
-	        e.printStackTrace();		
-    	}	
+	public static void main(String[] args) {
+		Patient a = new Patient(1);
+		Patient b = new Patient(2);
+		Thread j = new Thread(a);
+		Thread k = new Thread(b);
+		j.start();
+		k.start();
+	}	
 	
-    }
+	class SampleListener implements ServiceListener {
+		public void serviceAdded(final ServiceEvent event) {
+			noDeviceFound = true;
+			System.out.println("Service added   : " + event.getName() + "."
+					+ event.getType());
+			// The following line is required to get all information associated
+			// with a service registration - not just the name and type - for
+			// example, the port number and properties. Notification is sent to
+			// the
+			// serviceResolved(...) method which the request has been completed.
+			event.getDNS().requestServiceInfo(event.getType(), event.getName(),
+					0);
+		}
 
-    public void send(String msg) {
-    	try {					
-		//byte[] buf = new byte[256];			
-		byte[] buf = msg.getBytes();
+		public void serviceRemoved(ServiceEvent event) {
+			System.out.println("Service removed : " + event.getName() + "."
+					+ event.getType());
+		}
 
-		// create the packet to wrap the msg data
-		DatagramPacket packet = new DatagramPacket(buf, buf.length, 			multicastAddress, multiCastPort);
-	     
-		socket.send(packet);
+		public void serviceResolved(ServiceEvent event) {
+			// Display some information about the service.
+			System.out.println("Service resolved: " + event.getInfo().getName()
+					+ ", host: " + event.getInfo().getHostAddress()
+					+ ", port: " + event.getInfo().getPort());
+		}
 	}
-	catch (IOException e) {     	 
-	    e.printStackTrace();	
-	    // TO-DO: improve by handling this exception	
-    	}
-    }
-
 }
