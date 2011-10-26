@@ -5,6 +5,10 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.UnknownHostException;
+import java.rmi.Naming;
+import java.rmi.Remote;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
@@ -153,5 +157,12 @@ public class BP_machine implements machine {
 		String multicastGroup = "230.0.0.1";
 		String strMulticastPort = "4444";
 		machine.UDPReceiver(multicastGroup, Integer.parseInt(strMulticastPort));
+	    try {
+	        Registry registry = LocateRegistry.createRegistry(1099);
+	        Naming.rebind ("BloodPressure", (Remote) new BP_machine("Ward 3"));
+	        System.out.println ("BPMachine is ready.");
+	      } catch (Exception e) {
+	        System.out.println ("BPMachine failed: " + e);
+	      }
 	}
 }

@@ -1,3 +1,6 @@
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.util.LinkedList;
 import java.io.*;
 import java.net.*;
@@ -120,7 +123,16 @@ public class Patient implements Runnable {
 					+ ", host: " + event.getInfo().getHostAddress()
 					+ ", port: " + event.getInfo().getPort());
 			if(tests.contains(testName)){
-				//do some RMI stuff here
+				try {
+					machine newMachine = (machine) Naming.lookup("//localHost/"+testName);
+					newMachine.completeTask();
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				} catch (NotBoundException e) {
+					e.printStackTrace();
+				}
 			}
 			else{
 				jmdns.close();
