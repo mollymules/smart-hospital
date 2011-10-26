@@ -63,8 +63,8 @@ public class BP_machine implements machine {
 				socket.receive(packet);
 				String input = new String(packet.getData()).trim();
 				String[] temp = input.split("_");
-				P_ID = temp[1];
-				String patientWard = temp[2];
+				P_ID = temp[0];
+				String patientWard = temp[1];
 				System.out.println("Patient " + P_ID + "In Ward :" + Ward);
 				// break. Start broadcasting
 				if (Ward.equals(patientWard)) {
