@@ -18,15 +18,17 @@ import javax.jmdns.ServiceListener;
 public class Patient implements Runnable {
 	/* This is by Mary */
 	private int patientID;
+	private String location;
 	private LinkedList<String> tests;
 	protected MulticastSocket socket = null;
 	protected InetAddress multicastAddress;
 	protected int multicastPort;
 	boolean noDeviceFound;
-	public static final String SERVICE_TYPE = "smart_hospital._udp.local.";
+	public static final String SERVICE_TYPE = "smart_hospital._tcp.local.";
 
-	public Patient(int patient_id) {
+	public Patient(int patient_id, String ward) {
 		patientID = patient_id;
+		location = ward;
 		noDeviceFound = true;
 	}
 
@@ -56,7 +58,7 @@ public class Patient implements Runnable {
 
 	public void send() {
 		try {
-			String msg = "" + patientID + "";
+			String msg = "" + patientID + "_" + location;
 			byte[] buf = msg.getBytes();
 			System.out.println(msg);
 			// create the packet to wrap the msg data
@@ -99,12 +101,15 @@ public class Patient implements Runnable {
 	}
 
 	public static void main(String[] args) {
-		Patient a = new Patient(1);
-		Patient b = new Patient(2);
+		Patient a = new Patient(1, "Ward 1");
+		Patient b = new Patient(2, "Ward 3");
 		Thread j = new Thread(a);
-		Thread k = new Thread(b);
+		Thread k = new Thread(b);		
+		a.startListner();
+		b.startListner();
 		j.start();
 		k.start();
+
 	}	
 	
 	class SampleListener implements ServiceListener {
