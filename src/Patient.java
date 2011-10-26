@@ -91,10 +91,11 @@ public class Patient implements Runnable {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		// Work the magic: this is where the service listener is registered.
-		
-
+		}	      // Work the magic: this is where the service listener is registered.
+	
+	}
+	public void endConnection(JmDNS connection){
+		connection.close();
 	}
 
 	public static void main(String[] args) {
