@@ -20,10 +20,11 @@ public class Patient implements Runnable {
 	private int patientID;
 	private String location;//where the patient is in the hospital
 	private LinkedList<String> tests;//tests the patient needs
+	boolean noDeviceFound;
 	protected MulticastSocket socket = null;
 	protected InetAddress multicastAddress;
 	protected int multicastPort;
-	boolean noDeviceFound;
+	private JmDNS jmdns;
 	public static final String SERVICE_TYPE = "smart_hospital._tcp.local.";
 
 	public Patient(int patient_id, String ward) {
@@ -31,7 +32,10 @@ public class Patient implements Runnable {
 		location = ward;
 		noDeviceFound = true;
 	}
-
+	
+	/*This is the simulated RFID tag.
+	 * It broadcasts the patients ID and location every half a second.
+	 * */
 	public void startBroadcast() {
 		multicastPort = 4444;
 		try {
@@ -70,48 +74,27 @@ public class Patient implements Runnable {
 			// TO-DO: improve by handling this exception
 		}
 	}
-
-	public LinkedList<String> getTests() {
-		return tests;
-	}
-
-	public void run() {
-		startBroadcast();
-	}
-
-
-
-	public void startListner() {
+	
+	public void startListener() {
 		// Again, you can specify which network interface you would like to
 		// browse
 		// for services on; see commented line.
 		// final JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
-		JmDNS jmdns;
 		try {
 			jmdns = JmDNS.create();
 			jmdns.addServiceListener(SERVICE_TYPE, new SampleListener());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}	      // Work the magic: this is where the service listener is registered.
-	
+		}
+		// Work the magic: this is where the service listener is registered.
+		
 	}
-	public void endConnection(JmDNS connection){
-		connection.close();
+	
+	public LinkedList<String> getTests() {
+		return tests;
 	}
 
-	public static void main(String[] args) {
-		Patient a = new Patient(1, "Ward 1");
-		Patient b = new Patient(2, "Ward 3");
-		Thread j = new Thread(a);
-		Thread k = new Thread(b);		
-		a.startListner();
-		b.startListner();
-		j.start();
-		k.start();
-
-	}	
-	
 	class SampleListener implements ServiceListener {
 		public void serviceAdded(final ServiceEvent event) {
 			noDeviceFound = true;
@@ -124,18 +107,39 @@ public class Patient implements Runnable {
 			// serviceResolved(...) method which the request has been completed.
 			event.getDNS().requestServiceInfo(event.getType(), event.getName(),
 					0);
+		
 		}
-
 		public void serviceRemoved(ServiceEvent event) {
 			System.out.println("Service removed : " + event.getName() + "."
 					+ event.getType());
 		}
-
 		public void serviceResolved(ServiceEvent event) {
 			// Display some information about the service.
-			System.out.println("Service resolved: " + event.getInfo().getName()
+			String testName = event.getInfo().getName();
+			System.out.println("Service resolved: " + testName
 					+ ", host: " + event.getInfo().getHostAddress()
 					+ ", port: " + event.getInfo().getPort());
+			if(tests.contains(testName)){
+				//do some RMI stuff here
+			}
+			else{
+				jmdns.close();
+			}	
 		}
+	}	
+	
+	public void run() {
+		startBroadcast();
+		startListener();
 	}
+
+	public static void main(String[] args) {
+		Patient a = new Patient(1, "Ward 1");
+		Patient b = new Patient(2, "Ward 3");
+		Thread j = new Thread(a);
+		Thread k = new Thread(b);		
+		j.start();
+		k.start();
+
+	}	
 }

@@ -31,14 +31,22 @@ public class BP_machine implements machine {
 	public void UDPReceiver(String multicastGroup, int multiCastPort) {
 
 		try {
-			multicastAddress = InetAddress.getByName(multicastGroup);
-			socket.joinGroup(multicastAddress);
-			socket = new MulticastSocket(multiCastPort);
-		} catch (UnknownHostException e1) {
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
+			  multicastAddress = InetAddress.getByName(multicastGroup);
+			}
+			catch(Throwable t) {
+			  System.out.println("Exception getting inetaddress for group:"+ multicastGroup);
+			}
+			try {
+			  // creates the multicast socket
+		 	  socket = new MulticastSocket(multiCastPort); 
+			  socket.joinGroup(multicastAddress);	 
+			}
+			catch (java.net.SocketException e) {
+			  System.out.println("Exception creating multicast socket and joining group: " + e.getMessage());
+			}
+			catch (IOException e) {     	 
+			        e.printStackTrace();		
+		    	}	
 
 		// Keep reading for ever
 		while (UDPin == true) {
@@ -55,7 +63,7 @@ public class BP_machine implements machine {
 				String patientWard = temp[2];
 				System.out.println("Patient " + P_ID + "In Ward :" + Ward);
 				// break. Start broadcasting
-				if (Ward == patientWard) {
+				if (Ward.equals(patientWard)) {
 					UDPin = false;
 				}
 			} catch (IOException e) {
