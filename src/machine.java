@@ -21,11 +21,12 @@ public interface machine {
 	String getResults();
 	
 	//Method for sending results to the sever
-	void toServer();
+	void toServer(String P, String W, String R);
 	
 	//Start ZeroConf Broadcasting
 	void startBroadcasting();
 	
+	void unReg();
 	
 	
 
