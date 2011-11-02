@@ -1,6 +1,10 @@
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.util.LinkedList;
 import java.io.*;
 import java.net.*;
+
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceListener;
@@ -17,8 +21,8 @@ import javax.jmdns.ServiceListener;
 public class Patient implements Runnable {
 	/* This is by Mary */
 	private int patientID;
-	private String location;//where the patient is in the hospital
-	private LinkedList<String> tests;//tests the patient needs
+	private String location;// where the patient is in the hospital
+	private LinkedList<String> tests;// tests the patient needs
 	boolean noDeviceFound;
 	protected MulticastSocket socket = null;
 	protected InetAddress multicastAddress;
@@ -30,11 +34,14 @@ public class Patient implements Runnable {
 		patientID = patient_id;
 		location = ward;
 		noDeviceFound = true;
+		tests = new LinkedList<String>();
+		tests.add("BloodPressu");
 	}
-	
-	/*This is the simulated RFID tag.
-	 * It broadcasts the patients ID and location every half a second.
-	 * */
+
+	/*
+	 * This is the simulated RFID tag. It broadcasts the patients ID and
+	 * location every half a second.
+	 */
 	public void startBroadcast() {
 		multicastPort = 4444;
 		try {
@@ -53,7 +60,7 @@ public class Patient implements Runnable {
 		while (noDeviceFound) {
 			send();
 			try {
-				Thread.sleep(500);
+				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 			}
 		}
@@ -73,11 +80,10 @@ public class Patient implements Runnable {
 			// TO-DO: improve by handling this exception
 		}
 	}
-	
+
 	public void startListener() {
 		// Again, you can specify which network interface you would like to
-		// browse
-		// for services on; see commented line.
+		// browse for services on; see commented line.
 		// final JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
 		try {
 			jmdns = JmDNS.create();
@@ -86,59 +92,78 @@ public class Patient implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		// Work the magic: this is where the service listener is registered.
-		
 	}
-	
+
 	public LinkedList<String> getTests() {
 		return tests;
 	}
 
 	class SampleListener implements ServiceListener {
 		public void serviceAdded(final ServiceEvent event) {
-			noDeviceFound = true;
-			System.out.println("Service added   : " + event.getName() + "."
-					+ event.getType());
+			noDeviceFound = false;
+			/*
+			 * System.out.println("Service added   : " + event.getName() + "." +
+			 * event.getType());
+			 
 			// The following line is required to get all information associated
 			// with a service registration - not just the name and type - for
 			// example, the port number and properties. Notification is sent to
 			// the
-			// serviceResolved(...) method which the request has been completed.
+			// serviceResolved(...) method which the request has been completed.*/
 			event.getDNS().requestServiceInfo(event.getType(), event.getName(),
 					0);
-		
+					
 		}
+
 		public void serviceRemoved(ServiceEvent event) {
 			System.out.println("Service removed : " + event.getName() + "."
 					+ event.getType());
 		}
+
 		public void serviceResolved(ServiceEvent event) {
 			// Display some information about the service.
 			String testName = event.getInfo().getName();
-			System.out.println("Service resolved: " + testName
-					+ ", host: " + event.getInfo().getHostAddress()
-					+ ", port: " + event.getInfo().getPort());
-			if(tests.contains(testName)){
+			/*
+			 * System.out.println("Service resolved: " + testName + ", host: " +
+			 * event.getInfo().getHostAddress() + ", port: " +
+			 * event.getInfo().getPort());
+			 */
+			if (tests.contains(testName)) {
 				System.out.println("the patient wants this test");
+			} else {
+				System.out.println("I don't need this test");				
+				noDeviceFound = true;
+				 machine foundTest;
+				try {
+					foundTest = (machine) Naming.lookup("//localHost/foundTest");
+					foundTest.unReg();
+				} catch (MalformedURLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (RemoteException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (NotBoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				startBroadcast();
 			}
-			else{
-				jmdns.close();
-			}	
 		}
-	}	
-	
+	}
+
 	public void run() {
-		startBroadcast();
 		startListener();
+		startBroadcast();
 	}
 
 	public static void main(String[] args) {
 		Patient a = new Patient(1, "Ward 1");
 		Patient b = new Patient(2, "Ward 3");
 		Thread j = new Thread(a);
-		Thread k = new Thread(b);		
+		Thread k = new Thread(b);
 		j.start();
 		k.start();
 
-	}	
+	}
 }
