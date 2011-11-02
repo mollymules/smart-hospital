@@ -138,13 +138,10 @@ public class Patient implements Runnable {
 					foundTest = (machine) Naming.lookup("//localHost/foundTest");
 					foundTest.unReg();
 				} catch (MalformedURLException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (RemoteException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (NotBoundException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				startBroadcast();
