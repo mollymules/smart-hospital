@@ -29,9 +29,9 @@ ToDo list:
 
 
  # Create a Server that register it services
- #Server to responds to request 
- #Create a dynamic port Id for the server
-#Set appropriate Error messages
-#Create RMI interface the server will use to send Message to Mysql Interface
-#Implementation for the interface
-#Install MySql Server
+ # Server to responds to request 
+ # Create a dynamic port Id for the server
+ # Set appropriate Error messages
+ # Create RMI interface the server will use to send Message to Mysql Interface
+ # Implementation for the interface
+ # Install MySql Server
