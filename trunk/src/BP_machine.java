@@ -14,6 +14,7 @@ public class BP_machine implements machine {
 	public static final String SERVICE_NAME = "BloodPressure";
 	public static final int SERVICE_PORT = 1268;
 	String P_ID = null;
+	String patientWard = null;
 	String Ward;
 	public int patientID = 0;
 	String bp_Result = "";
@@ -29,39 +30,36 @@ public class BP_machine implements machine {
 	public void UDPReceiver(String multicastGroup, int multiCastPort) {
 
 		try {
-			  multicastAddress = InetAddress.getByName(multicastGroup);
-			}
-			catch(Throwable t) {
-			  System.out.println("Exception getting inetaddress for group:"+ multicastGroup);
-			}
-			try {
-			  // creates the multicast socket
-		 	  socket = new MulticastSocket(multiCastPort); 
-			  socket.joinGroup(multicastAddress);	 
-			}
-			catch (java.net.SocketException e) {
-			  System.out.println("Exception creating multicast socket and joining group: " + e.getMessage());
-			}
-			catch (IOException e) {     	 
-			        e.printStackTrace();		
-		    	}	
+			multicastAddress = InetAddress.getByName(multicastGroup);
+		}
+		catch(Throwable t) {
+			System.out.println("Exception getting inetaddress for group:"+ multicastGroup);
+		}
+		try {
+			// creates the multicast socket
+			socket = new MulticastSocket(multiCastPort); 
+			socket.joinGroup(multicastAddress);	 
+		}
+		catch (java.net.SocketException e) {
+			System.out.println("Exception creating multicast socket and joining group: " + e.getMessage());
+		}
+		catch (IOException e) {     	 
+			e.printStackTrace();		
+		}	
 
 		// Keep reading for ever
 		while (UDPin == true) {
 			try {
 				byte[] buf = new byte[1024];
-				// HINT: TRY WHAT HAPPENS WHEN THE STRING RECEIVED IS BIGGER
-				// THAN THE BUFFER
-				// receive packet
 				DatagramPacket packet = new DatagramPacket(buf, buf.length);
 				socket.receive(packet);
 				String input = new String(packet.getData()).trim();
 				String[] temp = input.split("_");
-				P_ID = temp[0];
-				String patientWard = temp[1];
-				System.out.println("Patient " + P_ID + "In Ward :" + Ward);
+				this.P_ID = temp[0];
+				this.patientWard = temp[1];
 				// break. Start broadcasting
 				if (Ward.equals(patientWard)) {
+					System.out.println("Patient " + P_ID + " In Ward :" + patientWard);
 					UDPin = false;
 					startBroadcasting();
 				}
@@ -110,7 +108,7 @@ public class BP_machine implements machine {
 	}
 
 	@Override
-	public void toServer() {
+	public void toServer(String P, String W, String R) {
 		// TODO Send.bp_results; or something like that
 		// along with the patientID
 
@@ -125,16 +123,13 @@ public class BP_machine implements machine {
 			jmdns = JmDNS.create();
 			ServiceInfo info = ServiceInfo.create(SERVICE_TYPE, SERVICE_NAME,
 					SERVICE_PORT, 0, 0, "");
-			jmdns.registerService(info); // note that the
-			// service name may
-			// have changed if a
-			// service with that
-			// name was already
-			// registered.
-			// Wait for a keystroke before unregistering and quitting.
+			jmdns.registerService(info);
+
 			System.out.println("Press enter to unregister and quit");
 			new BufferedReader(new InputStreamReader(System.in)).readLine();
-			// Unregister the service.
+
+			//bp_Result = completeTask();
+			//Unregister the service.
 			jmdns.unregisterService(info);
 			jmdns.close();
 			System.exit(0);
@@ -144,6 +139,14 @@ public class BP_machine implements machine {
 			e.printStackTrace();
 		}
 	}
+	
+	@Override
+	public void unReg() {
+		//unregisterService(info);
+		
+	}
+	
+	
 
 	public static void main(String[] args) throws IOException {
 
@@ -153,4 +156,6 @@ public class BP_machine implements machine {
 		String strMulticastPort = "4444";
 		machine.UDPReceiver(multicastGroup, Integer.parseInt(strMulticastPort));
 	}
+
+	
 }
