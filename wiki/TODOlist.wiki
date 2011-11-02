@@ -13,6 +13,8 @@ ToDo list:
 
   * Fault tolerance and error handling 
 
+  * Encryption of the results before sent to the server
+
 *Mary*
 
   * Get RMI working 
@@ -26,5 +28,3 @@ ToDo list:
 *Ben* 
 
 *Sylvester*
-
-
