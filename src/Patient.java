@@ -1,10 +1,6 @@
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
 import java.util.LinkedList;
 import java.io.*;
 import java.net.*;
-import java.util.*;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceListener;
@@ -123,16 +119,7 @@ public class Patient implements Runnable {
 					+ ", host: " + event.getInfo().getHostAddress()
 					+ ", port: " + event.getInfo().getPort());
 			if(tests.contains(testName)){
-				try {
-					machine newMachine = (machine) Naming.lookup("//localHost/"+testName);
-					newMachine.completeTask();
-				} catch (MalformedURLException e) {
-					e.printStackTrace();
-				} catch (RemoteException e) {
-					e.printStackTrace();
-				} catch (NotBoundException e) {
-					e.printStackTrace();
-				}
+				System.out.println("the patient wants this test");
 			}
 			else{
 				jmdns.close();
