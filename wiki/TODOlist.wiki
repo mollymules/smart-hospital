@@ -19,5 +19,10 @@ ToDo list:
   # Fault tolerance and error handling 
 
 *Ben* 
+  # Build Gui for doctors to view records
+  # Connect to the server by ZeroConf
+  # Allow different searches in the GUI
+  # Display the records
+ 
 
 *Sylvester*
