@@ -128,12 +128,12 @@ public class BP_machine implements machine {
 					SERVICE_PORT, 0, 0, "");
 			jmdns.registerService(info);
 
-			System.out.println("Press enter to unregister and quit");
-			new BufferedReader(new InputStreamReader(System.in)).readLine();
-
-			//bp_Result = completeTask();
-			//Unregister the service.
-			jmdns.unregisterService(info);
+//			System.out.println("Press enter to unregister and quit");
+//			new BufferedReader(new InputStreamReader(System.in)).readLine();
+//
+//			//bp_Result = completeTask();
+//			//Unregister the service.
+			
 			jmdns.close();
 			System.exit(0);
 			System.out.println("Registered Service as " + info);
@@ -144,8 +144,8 @@ public class BP_machine implements machine {
 	}
 	
 	@Override
-	public void unReg() {
-		//unregisterService(info);	
+	public void unReg(JmDNS jmdns, ServiceInfo info) {
+		jmdns.unregisterService(info);	
 	}
 	
 	
