@@ -6,6 +6,8 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.rmi.Naming;
 import java.rmi.Remote;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
@@ -157,6 +159,7 @@ public class BP_machine implements machine {
 		String multicastGroup = "230.0.0.1";
 		String strMulticastPort = "4444";
 		machine.UDPReceiver(multicastGroup, Integer.parseInt(strMulticastPort));
+		Registry registry = LocateRegistry.createRegistry(1099);
 		Naming.rebind("foundTest", (Remote) machine);
 		
 	}
