@@ -1,0 +1,30 @@
+Tasks for everyone to do
+
+*Smart hospital*, 
+ToDo list:
+
+*Kevin*
+
+  * Send results to server  
+
+  * Create different machines 
+
+  * Make some machines moveable
+
+  * Fault tolerance and error handling 
+
+*Mary*
+
+  * Get RMI working 
+
+  * Get multiple patients working
+
+  * Create new patients on the server 
+
+  *Fault tolerance and error handling 
+
+*Ben* 
+
+*Sylvester*
+
+
