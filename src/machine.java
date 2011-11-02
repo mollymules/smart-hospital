@@ -1,3 +1,6 @@
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceInfo;
+
 //Code for all the Machines to implement from
 public interface machine {
 
@@ -26,7 +29,7 @@ public interface machine {
 	//Start ZeroConf Broadcasting
 	void startBroadcasting();
 	
-	void unReg();
+	void unReg(JmDNS jmdns, ServiceInfo info);
 	
 	
 
