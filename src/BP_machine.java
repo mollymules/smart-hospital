@@ -4,6 +4,9 @@ import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.rmi.Naming;
+import java.rmi.Remote;
+
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 
@@ -142,8 +145,7 @@ public class BP_machine implements machine {
 	
 	@Override
 	public void unReg() {
-		//unregisterService(info);
-		
+		//unregisterService(info);	
 	}
 	
 	
@@ -155,6 +157,8 @@ public class BP_machine implements machine {
 		String multicastGroup = "230.0.0.1";
 		String strMulticastPort = "4444";
 		machine.UDPReceiver(multicastGroup, Integer.parseInt(strMulticastPort));
+		Naming.rebind("foundTest", (Remote) machine);
+		
 	}
 
 	
