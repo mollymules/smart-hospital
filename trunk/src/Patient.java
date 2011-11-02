@@ -136,7 +136,7 @@ public class Patient implements Runnable {
 				 machine foundTest;
 				try {
 					foundTest = (machine) Naming.lookup("//localHost/foundTest");
-					foundTest.unReg();
+					foundTest.unReg(jmdns, event.getInfo());
 				} catch (MalformedURLException e) {
 					e.printStackTrace();
 				} catch (RemoteException e) {
@@ -155,12 +155,12 @@ public class Patient implements Runnable {
 	}
 
 	public static void main(String[] args) {
-		Patient a = new Patient(1, "Ward 1");
-		Patient b = new Patient(2, "Ward 3");
+		Patient a = new Patient(1, "Ward 3");
+		//Patient b = new Patient(2, "Ward 3");
 		Thread j = new Thread(a);
-		Thread k = new Thread(b);
+		//Thread k = new Thread(b);
 		j.start();
-		k.start();
+		//k.start();
 
 	}
 }
