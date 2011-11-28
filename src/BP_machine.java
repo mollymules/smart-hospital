@@ -6,13 +6,15 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.rmi.Naming;
 import java.rmi.Remote;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 
-public class BP_machine implements machine {
+public class BP_machine extends UnicastRemoteObject implements machine {
 	/* This is Kevs bit no laughing at my code :( */
 
 	public static final String SERVICE_TYPE = "smart_hospital._tcp.local.";
@@ -27,7 +29,7 @@ public class BP_machine implements machine {
 	protected InetAddress multicastAddress;
 	boolean UDPin;
 
-	BP_machine(String location) {
+	public BP_machine(String location) throws RemoteException{
 		Ward = location;
 		UDPin = true;
 	}
@@ -126,22 +128,27 @@ public class BP_machine implements machine {
 		JmDNS jmdns;
 		try {
 			jmdns = JmDNS.create();
-			ServiceInfo info = ServiceInfo.create(SERVICE_TYPE, SERVICE_NAME,
-					SERVICE_PORT, 0, 0, "");
+			ServiceInfo info = ServiceInfo.create(SERVICE_TYPE, SERVICE_NAME,SERVICE_PORT, 0, 0, "");
 			jmdns.registerService(info);
 
-//			System.out.println("Press enter to unregister and quit");
-//			new BufferedReader(new InputStreamReader(System.in)).readLine();
-//
-//			//bp_Result = completeTask();
-//			//Unregister the service.
-			
+			Registry registry = LocateRegistry.createRegistry(1099);
+			Naming.rebind("BloodPressure", new BP_machine("Ward 3"));
+			System.out.println("BP machine is ready");
+
+			// System.out.println("Press enter to unregister and quit");
+			// new BufferedReader(new InputStreamReader(System.in)).readLine();
+			//
+			// //bp_Result = completeTask();
+			// //Unregister the service.
+
 			jmdns.close();
 			System.exit(0);
 			System.out.println("Registered Service as " + info);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (Exception e) {
+			System.out.println("Reposit Server failed: " + e);
 		}
 	}
 	
