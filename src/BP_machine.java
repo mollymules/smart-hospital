@@ -159,7 +159,7 @@ public class BP_machine implements machine {
 		String multicastGroup = "230.0.0.1";
 		String strMulticastPort = "4444";
 		machine.UDPReceiver(multicastGroup, Integer.parseInt(strMulticastPort));
-		Registry registry = LocateRegistry.createRegistry(1099);
+		Registry registry = LocateRegistry.createRegistry(2000);
 		Naming.rebind("foundTest", (Remote) machine);
 		
 	}

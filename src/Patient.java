@@ -35,7 +35,7 @@ public class Patient implements Runnable {
 		location = ward;
 		noDeviceFound = true;
 		tests = new LinkedList<String>();
-		tests.add("BloodPressu");
+		tests.add("XRay");
 	}
 
 	/*
@@ -57,7 +57,7 @@ public class Patient implements Runnable {
 		}
 		// Continuously broadcast the patient id
 		// until a device comes in range
-		while (noDeviceFound) {
+		while (this.noDeviceFound) {
 			send();
 			try {
 				Thread.sleep(1000);
@@ -108,10 +108,8 @@ public class Patient implements Runnable {
 			// The following line is required to get all information associated
 			// with a service registration - not just the name and type - for
 			// example, the port number and properties. Notification is sent to
-			// the
-			// serviceResolved(...) method which the request has been completed.*/
-			event.getDNS().requestServiceInfo(event.getType(), event.getName(),
-					0);
+			// the serviceResolved(...) method which the request has been completed.*/
+			event.getDNS().requestServiceInfo(event.getType(), event.getName(),0);
 					
 		}
 
@@ -123,44 +121,56 @@ public class Patient implements Runnable {
 		public void serviceResolved(ServiceEvent event) {
 			// Display some information about the service.
 			String testName = event.getInfo().getName();
+			String patientRequest = event.getInfo().getTextString().trim();
+			if(!(Integer.toString(patientID).equals(patientRequest))){
+				System.out.println(patientID + ": machine wasn't looking for you");
+				noDeviceFound = true;
+				startBroadcast();
+				jmdns.close();
+				startListener();
+			}
 			/*
 			 * System.out.println("Service resolved: " + testName + ", host: " +
 			 * event.getInfo().getHostAddress() + ", port: " +
 			 * event.getInfo().getPort());
-			 */
+			 
+			machine foundTest = null;
+			try {
+				foundTest = (machine) Naming.lookup("/foundTest");
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			} catch (NotBoundException e) {
+				e.printStackTrace();
+			}*/
 			if (tests.contains(testName)) {
-				System.out.println("the patient wants this test");
+				System.out.println(patientID +" wants this test");
+				//foundTest.completeTask();
 			} else {
-				System.out.println("I don't need this test");				
+				System.out.println(patientID +" doesn't need this test");
+				//foundTest.unReg(jmdns, event.getInfo());
 				noDeviceFound = true;
-				 machine foundTest;
-				try {
-					foundTest = (machine) Naming.lookup("//localHost/foundTest");
-					foundTest.unReg(jmdns, event.getInfo());
-				} catch (MalformedURLException e) {
-					e.printStackTrace();
-				} catch (RemoteException e) {
-					e.printStackTrace();
-				} catch (NotBoundException e) {
-					e.printStackTrace();
-				}
 				startBroadcast();
+				jmdns.close();
+				startListener();	
 			}
 		}
 	}
 
 	public void run() {
-		startListener();
-		startBroadcast();
+		this.startListener();
+		this.startBroadcast();
 	}
 
-	public static void main(String[] args) {
-		Patient a = new Patient(1, "Ward 3");
-		//Patient b = new Patient(2, "Ward 3");
+	public static void main(String[] args){
+		Patient a = new Patient(1, "Ward 1");
+		Patient b = new Patient(2, "Ward 3");
+		b.tests.add("BloodPressure");
 		Thread j = new Thread(a);
-		//Thread k = new Thread(b);
+		Thread k = new Thread(b);
 		j.start();
-		//k.start();
+		k.start();
 
 	}
 }
