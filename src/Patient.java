@@ -1,6 +1,8 @@
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.LinkedList;
 import java.io.*;
 import java.net.*;
@@ -43,6 +45,7 @@ public class Patient implements Runnable {
 	 * location every half a second.
 	 */
 	public void startBroadcast() {
+		noDeviceFound = true;
 		multicastPort = 4444;
 		try {
 			multicastAddress = InetAddress.getByName("230.0.0.1");
@@ -70,8 +73,8 @@ public class Patient implements Runnable {
 	public void send() {
 		try {
 			String msg = "" + patientID + "_" + location;
-			byte[] buf = msg.getBytes();
 			System.out.println(msg);
+			byte[] buf = msg.getBytes();
 			DatagramPacket packet = new DatagramPacket(buf, buf.length,
 					multicastAddress, multicastPort);
 			socket.send(packet);
@@ -101,6 +104,7 @@ public class Patient implements Runnable {
 			event.getDNS().requestServiceInfo(event.getType(), event.getName(),0);
 					
 		}
+		
 		public void serviceRemoved(ServiceEvent event) {
 			System.out.println("Service removed : " + event.getName() + "."
 					+ event.getType());
@@ -109,49 +113,32 @@ public class Patient implements Runnable {
 		public void serviceResolved(ServiceEvent event) {
 			// Display some information about the service.
 			String testName = event.getInfo().getName();
-			System.out.println(testName);
+			// which patient the machine is looking for:
 			String patientRequest = event.getInfo().getTextString().trim();
-			System.out.println(patientRequest);
-			if(!(Integer.toString(patientID).equals(patientRequest))){
-				System.out.println(patientID + ": machine wasn't looking for you");
-				noDeviceFound = true;
-				startBroadcast();
-				jmdns.close();
-				startListener();
-			}
-			/*
-			 * System.out.println("Service resolved: " + testName + ", host: " +
-			 * event.getInfo().getHostAddress() + ", port: " +
-			 * event.getInfo().getPort());
-			 
-			machine foundTest = null;*/
-			try {
-				machine aMachine = (machine) Naming.lookup("//localHost/"+testName );
-				aMachine.completeTask();
-				//System.out.println("storing data for sensor " + sensorID);
-			} catch (MalformedURLException e) {
-				e.printStackTrace();
-			} catch (RemoteException e) {
-				/*HERE:
-				 * I would use a linked list to store the readings
-				 * that weren't sent 
-				 * when the exception is lifted,
-				 * the list would be sent to the repository and
-				 * added to the current list for the sensor*/
-			} catch (NotBoundException e) {
-				e.printStackTrace();
-			}
-		
-			if (tests.contains(testName)) {
-				System.out.println(patientID +" wants this test");
-				//foundTest.completeTask();
+
+			// if the patient isn't who the machine is looking for:
+			if (!(Integer.toString(patientID).equals(patientRequest))) {
+				System.out.println(patientID
+						+ ": machine wasn't looking for you");
+				run();
 			} else {
-				System.out.println(patientID +" doesn't need this test");
-				//foundTest.unReg(jmdns, event.getInfo());
-				noDeviceFound = true;
-				startBroadcast();
-				jmdns.close();
-				startListener();	
+				if (tests.contains(testName)) {
+					System.out.println(patientID + " needs this test");
+					try {
+						machine aMachine = (machine) Naming.lookup("//localHost/" + testName);
+						System.out.println("Patient "+patientID+" has got a test: "+ testName);
+						aMachine.completeTask();
+					} catch (MalformedURLException e) {
+						e.printStackTrace();
+					} catch (RemoteException e) {
+						e.printStackTrace();
+					} catch (NotBoundException e) {
+						e.printStackTrace();
+					}
+				} else {
+					System.out.println(patientID + " doesn't need this test");
+				}
+				run();
 			}
 		}
 	}
@@ -162,12 +149,12 @@ public class Patient implements Runnable {
 	}
 
 	public static void main(String[] args){
-		Patient a = new Patient(1, "Ward 1");
+		//Patient a = new Patient(1, "Ward 1");
 		Patient b = new Patient(2, "Ward 3");
 		b.tests.add("BloodPressure");
-		Thread j = new Thread(a);
+		//Thread j = new Thread(a);
 		Thread k = new Thread(b);
-		j.start();
+		//j.start();
 		k.start();
 
 	}
