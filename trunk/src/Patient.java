@@ -134,16 +134,24 @@ public class Patient implements Runnable {
 			 * event.getInfo().getHostAddress() + ", port: " +
 			 * event.getInfo().getPort());
 			 
-			machine foundTest = null;
+			machine foundTest = null;*/
 			try {
-				foundTest = (machine) Naming.lookup("/foundTest");
+				machine aMachine = (machine) Naming.lookup("//localHost/"+testName );
+				aMachine.completeTask();
+				//System.out.println("storing data for sensor " + sensorID);
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 			} catch (RemoteException e) {
-				e.printStackTrace();
+				/*HERE:
+				 * I would use a linked list to store the readings
+				 * that weren't sent 
+				 * when the exception is lifted,
+				 * the list would be sent to the repository and
+				 * added to the current list for the sensor*/
 			} catch (NotBoundException e) {
 				e.printStackTrace();
-			}*/
+			}
+		
 			if (tests.contains(testName)) {
 				System.out.println(patientID +" wants this test");
 				//foundTest.completeTask();
