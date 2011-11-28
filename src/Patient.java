@@ -64,6 +64,7 @@ public class Patient implements Runnable {
 			} catch (InterruptedException e) {
 			}
 		}
+		System.out.println("broadcast has stopped");
 	}
 
 	public void send() {
@@ -71,25 +72,19 @@ public class Patient implements Runnable {
 			String msg = "" + patientID + "_" + location;
 			byte[] buf = msg.getBytes();
 			System.out.println(msg);
-			// create the packet to wrap the msg data
 			DatagramPacket packet = new DatagramPacket(buf, buf.length,
 					multicastAddress, multicastPort);
 			socket.send(packet);
 		} catch (IOException e) {
 			e.printStackTrace();
-			// TO-DO: improve by handling this exception
 		}
 	}
 
 	public void startListener() {
-		// Again, you can specify which network interface you would like to
-		// browse for services on; see commented line.
-		// final JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
 		try {
 			jmdns = JmDNS.create();
 			jmdns.addServiceListener(SERVICE_TYPE, new SampleListener());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -99,20 +94,13 @@ public class Patient implements Runnable {
 	}
 
 	class SampleListener implements ServiceListener {
+		
 		public void serviceAdded(final ServiceEvent event) {
 			noDeviceFound = false;
-			/*
-			 * System.out.println("Service added   : " + event.getName() + "." +
-			 * event.getType());
-			 
-			// The following line is required to get all information associated
-			// with a service registration - not just the name and type - for
-			// example, the port number and properties. Notification is sent to
-			// the serviceResolved(...) method which the request has been completed.*/
+			// the serviceResolved(...) method is called  with this line*/
 			event.getDNS().requestServiceInfo(event.getType(), event.getName(),0);
 					
 		}
-
 		public void serviceRemoved(ServiceEvent event) {
 			System.out.println("Service removed : " + event.getName() + "."
 					+ event.getType());
@@ -121,7 +109,9 @@ public class Patient implements Runnable {
 		public void serviceResolved(ServiceEvent event) {
 			// Display some information about the service.
 			String testName = event.getInfo().getName();
+			System.out.println(testName);
 			String patientRequest = event.getInfo().getTextString().trim();
+			System.out.println(patientRequest);
 			if(!(Integer.toString(patientID).equals(patientRequest))){
 				System.out.println(patientID + ": machine wasn't looking for you");
 				noDeviceFound = true;
