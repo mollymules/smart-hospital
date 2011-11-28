@@ -9,10 +9,10 @@ public interface machine {
 	void UDPReceiver(String multicastGroup, int multiCastPort);
 	
 	//Takes in the Patient ID
-	void Patient_ID(int p);
+	void Patient_ID(String p);
 	
 	//returns Patient
-	int getPatient_ID();
+	String getPatient_ID();
 	
 	//True is has patient 
 	boolean has_Patient();
@@ -27,7 +27,7 @@ public interface machine {
 	void toServer(String P, String W, String R);
 	
 	//Start ZeroConf Broadcasting
-	void startBroadcasting();
+	void startBroadcasting(String P_ID);
 	
 	void unReg(JmDNS jmdns, ServiceInfo info);
 	

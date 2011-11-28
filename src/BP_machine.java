@@ -20,10 +20,11 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 	public static final String SERVICE_TYPE = "smart_hospital._tcp.local.";
 	public static final String SERVICE_NAME = "BloodPressure";
 	public static final int SERVICE_PORT = 1268;
-	String P_ID = null;
+	//String P_ID = null;
 	String patientWard = null;
 	String Ward;
-	public int patientID = 0;
+	
+	String patientID =null;
 	String bp_Result = "";
 	protected MulticastSocket socket = null;
 	protected InetAddress multicastAddress;
@@ -62,11 +63,11 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 				socket.receive(packet);
 				String input = new String(packet.getData()).trim();
 				String[] temp = input.split("_");
-				this.P_ID = temp[0];
+				this.patientID = temp[0];
 				this.patientWard = temp[1];
 				// break. Start broadcasting
 				if (Ward.equals(patientWard)) {
-					System.out.println("Patient " + P_ID + " In Ward :" + patientWard);
+					System.out.println("Patient " + patientID + " In Ward :" + patientWard);
 					UDPin = false;
 					startBroadcasting();
 				}
@@ -76,18 +77,18 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		}
 	}
 
-	public void Patient_ID(int p) {
+	public void Patient_ID(String p) {
 		this.patientID = p;
 	}
 
-	public int getPatient_ID() {
+	public String getPatient_ID() {
 		return patientID;
 	}
 
 	@Override
 	public boolean has_Patient() {
 
-		if (patientID != 0) {
+		if (patientID != null) {
 			return true;
 		}
 
@@ -128,7 +129,7 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		JmDNS jmdns;
 		try {
 			jmdns = JmDNS.create();
-			ServiceInfo info = ServiceInfo.create(SERVICE_TYPE, SERVICE_NAME,SERVICE_PORT, 0, 0, "");
+			ServiceInfo info = ServiceInfo.create(SERVICE_TYPE, SERVICE_NAME,SERVICE_PORT, 0, 0, ""+patientID);
 			jmdns.registerService(info);
 
 			Registry registry = LocateRegistry.createRegistry(1099);
@@ -141,8 +142,8 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 			// //bp_Result = completeTask();
 			// //Unregister the service.
 
-			jmdns.close();
-			System.exit(0);
+			//jmdns.close();
+			//System.exit(0);
 			System.out.println("Registered Service as " + info);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -168,6 +169,12 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		machine.UDPReceiver(multicastGroup, Integer.parseInt(strMulticastPort));
 		Registry registry = LocateRegistry.createRegistry(2000);
 		Naming.rebind("foundTest", (Remote) machine);
+		
+	}
+
+	@Override
+	public void startBroadcasting(String P_ID) {
+		// TODO Auto-generated method stub
 		
 	}
 
