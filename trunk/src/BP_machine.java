@@ -134,7 +134,7 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 			ServiceInfo info = ServiceInfo.create(SERVICE_TYPE, SERVICE_NAME,SERVICE_PORT, 0, 0, ""+patientID);
 			jmdns.registerService(info);
 
-			Registry registry = LocateRegistry.createRegistry(2967);
+			Registry registry = LocateRegistry.createRegistry(1099);
 			Naming.rebind("BloodPressure", new BP_machine("Ward 3"));
 			System.out.println("BP machine is ready");
 			completeTask();
@@ -237,8 +237,8 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		String strMulticastPort = "4444";
 		System.out.println("Awating Patient");
 		machine.UDPReceiver(multicastGroup, Integer.parseInt(strMulticastPort));
-		Registry registry = LocateRegistry.createRegistry(3458);
 		
-		Naming.rebind("foundTest", (Remote) machine);
+		
+		
 	}
 }
