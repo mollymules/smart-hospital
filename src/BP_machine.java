@@ -13,6 +13,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.LinkedList;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
@@ -34,6 +35,7 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 
 	private String patientWard = null;
 	private String Ward;
+	LinkedList<String> recentPatients = new LinkedList<String>();
 
 	private String patientID =null;
 	private String bp_Result = "";
@@ -65,7 +67,7 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		catch (IOException e) {     	 
 			e.printStackTrace();		
 		}
-		// Keep reading for ever
+		// Keep reading forever
 		while (UDPin == true) {
 			try {
 				byte[] buf = new byte[1024];
@@ -76,10 +78,12 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 				this.patientID = temp[0];
 				this.patientWard = temp[1];
 				// break. Start broadcasting
-				if (Ward.equals(patientWard)) {
+				if (Ward.equals(patientWard) && !recentPatients.contains(patientID)) {
 					System.out.println("Patient " + patientID + " In Ward :" + patientWard);
 					UDPin = false;
 					startBroadcasting();
+				}else if (recentPatients.contains(patientID)){
+					System.out.println("Patient " + patientID + " Has already been seen");
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -123,22 +127,23 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 	}
 
 	public void startBroadcasting() {
-		// You can specify the interface that services are registered (and
-		// browsed
-		// for) on; see the commented lines following.
+		
 		JmDNS jmdns;
 		try {
 			jmdns = JmDNS.create();
 			ServiceInfo info = ServiceInfo.create(SERVICE_TYPE, SERVICE_NAME,SERVICE_PORT, 0, 0, ""+patientID);
 			jmdns.registerService(info);
 
-			Registry registry = LocateRegistry.createRegistry(2966);
+			Registry registry = LocateRegistry.createRegistry(2967);
 			Naming.rebind("BloodPressure", new BP_machine("Ward 3"));
 			System.out.println("BP machine is ready");
 			completeTask();
-			connectAvailServer();
-
+			//Add to a List of seen patients
+			recentPatients.add(patientID);
+			System.out.println("Patient " + patientID + " Added to History");
 			
+			//connectAvailServer();
+
 			//jmdns.close();
 			//System.exit(0);
 			System.out.println("Registered Service as " + info);
@@ -230,8 +235,10 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		BP_machine machine = new BP_machine("Ward 3");
 		String multicastGroup = "230.0.0.1";
 		String strMulticastPort = "4444";
+		System.out.println("Awating Patient");
 		machine.UDPReceiver(multicastGroup, Integer.parseInt(strMulticastPort));
-		Registry registry = LocateRegistry.createRegistry(3457);
+		Registry registry = LocateRegistry.createRegistry(3458);
+		
 		Naming.rebind("foundTest", (Remote) machine);
 	}
 }
