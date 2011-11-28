@@ -23,11 +23,6 @@ public interface machine {
 	//Returns the results
 	String getResults();
 	
-	//Method for sending results to the sever
-	void toServer(String P, String W, String R);
-	
-	//Start ZeroConf Broadcasting
-	void startBroadcasting(String P_ID);
 	
 	void unReg(JmDNS jmdns, ServiceInfo info);
 	

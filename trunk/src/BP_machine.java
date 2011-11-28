@@ -1,9 +1,12 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.rmi.Naming;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -14,18 +17,26 @@ import java.rmi.server.UnicastRemoteObject;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 
+
 public class BP_machine extends UnicastRemoteObject implements machine {
 	/* This is Kevs bit no laughing at my code :( */
 
-	public static final String SERVICE_TYPE = "smart_hospital._tcp.local.";
-	public static final String SERVICE_NAME = "BloodPressure";
-	public static final int SERVICE_PORT = 1268;
-	//String P_ID = null;
-	String patientWard = null;
-	String Ward;
-	
-	String patientID =null;
-	String bp_Result = "";
+	private static final String SERVICE_TYPE = "smart_hospital._tcp.local.";
+	private static final String SERVICE_NAME = "BloodPressure";
+	private static final int SERVICE_PORT = 1268;
+
+	private String serverHost;
+	private int serverPort;
+	private boolean foundserv=false;
+	private String  SERVICENAME="hospitalserver";
+	private Socket toServer;
+	private JmDNS jmdns;
+
+	private String patientWard = null;
+	private String Ward;
+
+	private String patientID =null;
+	private String bp_Result = "";
 	protected MulticastSocket socket = null;
 	protected InetAddress multicastAddress;
 	boolean UDPin;
@@ -39,22 +50,21 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 
 		try {
 			multicastAddress = InetAddress.getByName(multicastGroup);
-		}
-		catch(Throwable t) {
-			System.out.println("Exception getting inetaddress for group:"+ multicastGroup);
-		}
+			}
+			catch(Throwable t) {
+				System.out.println("Exception getting inetaddress for group:"+ multicastGroup);
+			}
 		try {
 			// creates the multicast socket
 			socket = new MulticastSocket(multiCastPort); 
 			socket.joinGroup(multicastAddress);	 
-		}
-		catch (java.net.SocketException e) {
-			System.out.println("Exception creating multicast socket and joining group: " + e.getMessage());
-		}
+			}
+			catch (java.net.SocketException e) {
+				System.out.println("Exception creating multicast socket and joining group: " + e.getMessage());
+			}
 		catch (IOException e) {     	 
 			e.printStackTrace();		
-		}	
-
+		}
 		// Keep reading for ever
 		while (UDPin == true) {
 			try {
@@ -85,7 +95,7 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		return patientID;
 	}
 
-	@Override
+	
 	public boolean has_Patient() {
 
 		if (patientID != null) {
@@ -94,8 +104,7 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 
 		return false;
 	}
-
-	@Override
+	
 	public void completeTask() {
 		// TODO How ever we are going to represent each machine
 
@@ -106,19 +115,10 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		String bottem_Result = Integer.toString(bottem_Number);
 
 		this.bp_Result = top_Result + "/" + bottem_Result;
-
 	}
 
-	@Override
 	public String getResults() {
 		return bp_Result;
-
-	}
-
-	@Override
-	public void toServer(String P, String W, String R) {
-		// TODO Send.bp_results; or something like that
-		// along with the patientID
 
 	}
 
@@ -132,33 +132,97 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 			ServiceInfo info = ServiceInfo.create(SERVICE_TYPE, SERVICE_NAME,SERVICE_PORT, 0, 0, ""+patientID);
 			jmdns.registerService(info);
 
-			Registry registry = LocateRegistry.createRegistry(1099);
+			Registry registry = LocateRegistry.createRegistry(2966);
 			Naming.rebind("BloodPressure", new BP_machine("Ward 3"));
 			System.out.println("BP machine is ready");
+			completeTask();
+			connectAvailServer();
 
-			// System.out.println("Press enter to unregister and quit");
-			// new BufferedReader(new InputStreamReader(System.in)).readLine();
-			//
-			// //bp_Result = completeTask();
-			// //Unregister the service.
-
+			
 			//jmdns.close();
 			//System.exit(0);
 			System.out.println("Registered Service as " + info);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (Exception e) {
 			System.out.println("Reposit Server failed: " + e);
 		}
 	}
-	
-	@Override
 	public void unReg(JmDNS jmdns, ServiceInfo info) {
 		jmdns.unregisterService(info);	
 	}
-	
-	
+
+	/**
+	 * Sending to the database.
+	 * 
+	 * @throws IOException
+	 */
+	private void connectAvailServer() throws IOException{    	
+
+		// Again, you can specify which network interface you would like to browse
+		// for services on; see commented line.
+		// final JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
+		jmdns= JmDNS.create();
+		// Work the magic: this is where the service listener is registered.
+		jmdns.addServiceListener(SERVICE_TYPE, new SampleListener());
+		System.out.println("I found a service");
+	}
+	private void useServiceAvailable(String host,int port) throws IOException{
+		serverHost=host;
+		serverPort=port;
+
+		creatConnection(host,port);
+		String message="<?xml version=\"1.0\"?>\n" +
+		"<patient_measurement>\n"+
+		"<patient_id>dd</patient_id>\n"+
+		"<blood_pressure> "+ bp_Result+"</blood_pressure>\n"+		 	
+		"</patient_measurement>\n"+
+		"<xml_end>MessageEnd</xml_end>";
+		sendMessage(message);
+		//Sorry I finish with the service close service
+		jmdns.close();		
+	}
+	private void creatConnection(String the_serverHost, int the_serverPort){
+		// check if the Hostname or port Number are valid  
+		// Create a connection to the server.
+		try {
+			toServer = new Socket(the_serverHost, the_serverPort);
+		} catch (UnknownHostException e) {
+			System.out.println("Sorry unable to connect to Server Host");
+			e.printStackTrace();
+		} catch (IOException e) {
+			System.out.println("Could not get a socket from server");
+			e.printStackTrace();
+		}  
+
+	}
+
+	public void sendMessage(String a_message) {
+		PrintWriter out=null;
+		BufferedReader in=null;
+		try {
+			out = new PrintWriter(toServer.getOutputStream(), true);
+			in = new BufferedReader(new InputStreamReader(toServer.getInputStream()));
+			// Write the message to the socket and wait for 1-sec to send the next one.
+			out.println(a_message);
+			out.flush();
+			String reply=null;			 
+			while((reply=in.readLine())!=null) System.out.println("Responce from Server" + reply);
+		} catch (Exception e) {System.err.println("Sorry Iterator Interupted");}
+
+
+		try{
+			// tidy up
+			out.close();
+			in.close();
+			toServer.close();
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+		} catch (SecurityException se) {
+			se.printStackTrace();
+		}
+
+	}
 
 	public static void main(String[] args) throws IOException {
 
@@ -167,16 +231,7 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		String multicastGroup = "230.0.0.1";
 		String strMulticastPort = "4444";
 		machine.UDPReceiver(multicastGroup, Integer.parseInt(strMulticastPort));
-		Registry registry = LocateRegistry.createRegistry(2000);
+		Registry registry = LocateRegistry.createRegistry(3457);
 		Naming.rebind("foundTest", (Remote) machine);
-		
 	}
-
-	@Override
-	public void startBroadcasting(String P_ID) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	
 }
