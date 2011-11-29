@@ -96,6 +96,7 @@ public class BP_machine extends UnicastRemoteObject implements machine, Runnable
 				String[] temp = input.split("_");
 				this.patientID = temp[0];
 				this.patientWard = temp[1];
+				recentPatients.add(patientID);
 				// break. Start broadcasting
 				if (myLocation.equals(patientWard) && !recentPatients.contains(patientID)) {
 					System.out.println("Patient " + patientID + " In myLocation :" + patientWard);
@@ -167,24 +168,17 @@ public class BP_machine extends UnicastRemoteObject implements machine, Runnable
 		} catch (Exception e) {
 			System.out.println("Machine Server failed: " + e);
 		}
+		UDPin = true;
 		UDPReceiver(UDPMultiAdd, UDPMultiPort);
 	}
 	
 	public void unReg(JmDNS jmdns, ServiceInfo info) {
 		jmdns.unregisterService(info);	
 	}
-
-	/**
-	 * Sending to the database.
-	 * 
-	 * @throws IOException
-	 */
-	
 	
 	public void run(){
 		UDPReceiver(UDPMultiAdd, UDPMultiPort);
 	}
-	
 	
 	public static void main(String[] args) throws IOException {
 		// UDP Receiver stuff

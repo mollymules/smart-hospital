@@ -111,6 +111,7 @@ public class Patient implements Runnable {
 		public void serviceRemoved(ServiceEvent event) {
 			System.out.println("Service removed : " + event.getName() + "."
 					+ event.getType());
+			run();
 		}
 
 		public void serviceResolved(ServiceEvent event) {

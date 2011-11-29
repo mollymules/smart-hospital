@@ -16,8 +16,10 @@ public class Hospital {
 		for(int i = 0; i< numPatients; i++){
 			createPatient(i);
 		}
-		/*try {
+/*		try {
 			bp1 = new BP_machine("Ward 1","230.0.0.2", 4444);
+			Thread t = new Thread(bp1);
+			t.start();
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		} catch (MalformedURLException e) {
