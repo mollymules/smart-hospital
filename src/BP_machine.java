@@ -33,21 +33,26 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 	private String  SERVICENAME="hospitalserver";
 	
 	
-	private Socket toServer;
 	private JmDNS jmdns;
-
-	private String patientWard;
-	private String Ward;
 	LinkedList<String> recentPatients;
+	boolean UDPin;
+	String UDPMultiAdd;
+	int UDPMultiPort;
 
+	private String patientWard;//where patient is
+	private String myLocation;// where machine is
 	private String patientID;
+	
+	private Socket toServer;
 	String bp_Result;
 	protected MulticastSocket socket;
 	protected InetAddress multicastAddress;
-	boolean UDPin;
+	
 
-	public BP_machine(String location) throws RemoteException, MalformedURLException{
-		Ward = location;
+	public BP_machine(String location, String add, int multiPort) throws RemoteException, MalformedURLException{
+		String UDPMultiAdd = add;
+		UDPMultiPort = multiPort;
+		myLocation = location;
 		UDPin = true;
 		bp_Result = "";
 		patientID =null;
@@ -56,13 +61,10 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		patientWard = null;
 		foundserv = false;
 		SERVICENAME = "hospitalserver";
-		
-		
-		//Add to a List of seen patients
+		UDPReceiver(add, multiPort);
 	}
 
 	public void UDPReceiver(String multicastGroup, int multiCastPort) {
-
 		try {
 			multicastAddress = InetAddress.getByName(multicastGroup);
 			}
@@ -91,8 +93,8 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 				this.patientID = temp[0];
 				this.patientWard = temp[1];
 				// break. Start broadcasting
-				if (Ward.equals(patientWard) && !recentPatients.contains(patientID)) {
-					System.out.println("Patient " + patientID + " In Ward :" + patientWard);
+				if (myLocation.equals(patientWard) && !recentPatients.contains(patientID)) {
+					System.out.println("Patient " + patientID + " In myLocation :" + patientWard);
 					UDPin = false;
 					startBroadcasting();
 				}else if (recentPatients.contains(patientID)){
@@ -104,32 +106,15 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		}
 	}
 
-	public void Patient_ID(String p) {
-		this.patientID = p;
-	}
-
-	public String getPatient_ID() {
-		return patientID;
-	}
-
 	
-	public boolean has_Patient() {
-
-		if (patientID != null) {
-			return true;
-		}
-
-		return false;
-	}
-	
-	public void completeTask() {
+	public void completeTask(String patientID) {
 		int top_Number = 70 + (int) (Math.random() * ((160 - 70) + 1));
 		int bottem_Number = 50 + (int) (Math.random() * ((100 - 50) + 1));
 		String top_Result = Integer.toString(top_Number);
 		String bottem_Result = Integer.toString(bottem_Number);
 		this.bp_Result = top_Result + "/" + bottem_Result;
 		try {
-			connectAvailServer();
+			connectAvailServer(patientID);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -142,22 +127,34 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 	}
 
 	public void startBroadcasting() {
-		
 		JmDNS jmdns;
 		try {
 			jmdns = JmDNS.create();
 			ServiceInfo info = ServiceInfo.create(SERVICE_TYPE, SERVICE_NAME,SERVICE_PORT, 0, 0, ""+patientID);
 			jmdns.registerService(info);
-
-			
 			recentPatients.add(patientID);
-			System.out.println("Patient " + patientID + " Added to History");
+			ServerSocket server = new ServerSocket(SERVICE_PORT, 5);
+			boolean inUse = true;
+		      while (inUse) {
+		             Socket socket = server.accept();
+		             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		             String patient = in.readLine();
+		             if(patient.equals(patientID)){
+		            	 completeTask(patientID);
+		             }
+		             in.close();
+		             socket.close();
+		             unReg(jmdns, info);
+		             inUse = false;
+		       }
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
 			System.out.println("Machine Server failed: " + e);
 		}
+		UDPReceiver(UDPMultiAdd, UDPMultiPort);
 	}
+	
 	public void unReg(JmDNS jmdns, ServiceInfo info) {
 		jmdns.unregisterService(info);	
 	}
@@ -167,7 +164,7 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 	 * 
 	 * @throws IOException
 	 */
-	private void connectAvailServer() throws IOException{    	
+	private void connectAvailServer(String patientID) throws IOException{
 
 		// Again, you can specify which network interface you would like to browse
 		// for services on; see commented line.
@@ -175,7 +172,6 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		jmdns= JmDNS.create();
 		// Work the magic: this is where the service listener is registered.
 		jmdns.addServiceListener(SERVICE_TYPE, new SampleListener());
-		System.out.println("I found a service");
 	}
 	private void useServiceAvailable(String host,int port) throws IOException{
 		serverHost=host;
@@ -229,65 +225,12 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		} catch (SecurityException se) {
 			se.printStackTrace();
 		}
-
 	}
-	public void TCPSocketServer(int a_port) {
-	      try {
-	         ServerSocket my_serverSocket = new ServerSocket(a_port, my_backlog);
-	         System.out.println("TCP socket listening on port " + a_port);
-	      } catch (IOException ioe) {
-	         ioe.printStackTrace();
-	      } catch (SecurityException se) {
-	         se.printStackTrace();
-	      }
-	   }
-	
-	public void listen() {
-	      while (true) {
-	         try {
-	            // Listens for a connection to be made to this socket.
-	            Socket socket = my_serverSocket.accept();
-
-	            // Wrap a buffered reader round the socket input stream.
-	            // Read the javadoc to understand why we do this rather than dealing
-	            // with reading from raw sockets.
-	            BufferedReader in = new BufferedReader(new InputStreamReader(socket
-	                  .getInputStream()));
-
-	            // Read in the message
-	            String msg = in.readLine();
-
-	            // Print the message to the console
-	            System.out.println("Recceived message: " + msg);
-
-	            // EXERCISE: Instead of printing out client messages to the console:
-	            // 1. Construct a response in the form "Your message is: <message>".
-	            // 2. Send the response back to the client.
-
-	            // tidy up
-	            in.close();
-	            socket.close();
-	         } catch (IOException ioe) {
-	            ioe.printStackTrace();
-	         } catch (SecurityException se) {
-	            se.printStackTrace();
-	         }
-	      }
-	   }
 	
 	public static void main(String[] args) throws IOException {
-
 		// UDP Receiver stuff
-		BP_machine machine = new BP_machine("Ward 3");
-		String multicastGroup = "230.0.0.2";
-		String strMulticastPort = "4444";
+		BP_machine machine = new BP_machine("Ward 3","230.0.0.2", 4444);
 		System.out.println("Awating Patient");
-		machine.UDPReceiver(multicastGroup, Integer.parseInt(strMulticastPort));
-		
-		 int port = 1099;
-         TCPSocketServer server = new TCPSocketServer(port);
-         server.listen();
-		
 		
 	}
 }

@@ -8,21 +8,10 @@ public interface machine {
 	
 	void UDPReceiver(String multicastGroup, int multiCastPort);
 	
-	//Takes in the Patient ID
-	void Patient_ID(String p);
-	
-	//returns Patient
-	String getPatient_ID();
-	
-	//True is has patient 
-	boolean has_Patient();
-	
 	//Completes the specific job for each machine
-	void  completeTask();
+	void  completeTask(String patientID);
 	
-	//Returns the results
 	String getResults();
-	
 	
 	void unReg(JmDNS jmdns, ServiceInfo info);
 	
