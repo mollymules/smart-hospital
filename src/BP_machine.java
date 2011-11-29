@@ -1,26 +1,23 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
+
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.rmi.Naming;
-import java.rmi.Remote;
+
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
+
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 
 
-public class BP_machine extends UnicastRemoteObject implements machine {
+public class BP_machine extends UnicastRemoteObject implements machine, Runnable {
 	/* This is Kevs bit no laughing at my code :( */
 
 	private static final String SERVICE_TYPE = "smart_hospital._tcp.local.";
@@ -47,10 +44,16 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 	String bp_Result;
 	protected MulticastSocket socket;
 	protected InetAddress multicastAddress;
-	
+	private DoctorDisplay dd;
 
 	public BP_machine(String location, String add, int multiPort) throws RemoteException, MalformedURLException{
-		String UDPMultiAdd = add;
+		try {
+			dd = new DoctorDisplay();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		UDPMultiAdd = add;
 		UDPMultiPort = multiPort;
 		myLocation = location;
 		UDPin = true;
@@ -61,7 +64,8 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		patientWard = null;
 		foundserv = false;
 		SERVICENAME = "hospitalserver";
-		UDPReceiver(add, multiPort);
+		
+	
 	}
 
 	public void UDPReceiver(String multicastGroup, int multiCastPort) {
@@ -97,13 +101,16 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 					System.out.println("Patient " + patientID + " In myLocation :" + patientWard);
 					UDPin = false;
 					startBroadcasting();
+					socket.close();
 				}else if (recentPatients.contains(patientID)){
 					System.out.println("Patient " + patientID + " Has already been seen");
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			
 		}
+		
 	}
 
 	
@@ -113,9 +120,17 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		String top_Result = Integer.toString(top_Number);
 		String bottem_Result = Integer.toString(bottem_Number);
 		this.bp_Result = top_Result + "/" + bottem_Result;
+		System.out.println("Results Called");
 		try {
-			connectAvailServer(patientID);
-		} catch (IOException e) {
+			String reply = dd.sendMessageFromGui("<?xml version=\"1.0\"?>\n" +
+		"<patient_measurement>\n"+
+		"<patient_id>"+patientID+"</patient_id>\n"+
+		"<blood_pressure>70/86</blood_pressure>\n"+		 	
+		"</patient_measurement>\n"+
+		"<xml_end>MessageEnd</xml_end>");
+			
+			System.out.println(reply);
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -164,73 +179,19 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 	 * 
 	 * @throws IOException
 	 */
-	private void connectAvailServer(String patientID) throws IOException{
-
-		// Again, you can specify which network interface you would like to browse
-		// for services on; see commented line.
-		// final JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
-		jmdns= JmDNS.create();
-		// Work the magic: this is where the service listener is registered.
-		jmdns.addServiceListener(SERVICE_TYPE, new SampleListener());
+	
+	
+	public void run(){
+		UDPReceiver(UDPMultiAdd, UDPMultiPort);
 	}
-	private void useServiceAvailable(String host,int port) throws IOException{
-		serverHost=host;
-		serverPort=port;
-
-		creatConnection(host,port);
-		String message="<?xml version=\"1.0\"?>\n" +
-		"<patient_measurement>\n"+
-		"<patient_id>dd</patient_id>\n"+
-		"<blood_pressure> "+ bp_Result+"</blood_pressure>\n"+		 	
-		"</patient_measurement>\n"+
-		"<xml_end>MessageEnd</xml_end>";
-		sendMessage(message);
-		//Sorry I finish with the service close service
-		jmdns.close();		
-	}
-	private void creatConnection(String the_serverHost, int the_serverPort){
-		// check if the Hostname or port Number are valid  
-		// Create a connection to the server.
-		try {
-			toServer = new Socket(the_serverHost, the_serverPort);
-		} catch (UnknownHostException e) {
-			System.out.println("Sorry unable to connect to Server Host");
-			e.printStackTrace();
-		} catch (IOException e) {
-			System.out.println("Could not get a socket from server");
-			e.printStackTrace();
-		}  
-
-	}
-
-	public void sendMessage(String a_message) {
-		PrintWriter out=null;
-		BufferedReader in=null;
-		try {
-			out = new PrintWriter(toServer.getOutputStream(), true);
-			in = new BufferedReader(new InputStreamReader(toServer.getInputStream()));
-			// Write the message to the socket and wait for 1-sec to send the next one.
-			out.println(a_message);
-			out.flush();
-			String reply=null;			 
-			while((reply=in.readLine())!=null) System.out.println("Responce from Server" + reply);
-		} catch (Exception e) {System.err.println("Sorry Iterator Interupted");}
-		try{
-			// tidy up
-			out.close();
-			in.close();
-			toServer.close();
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-		} catch (SecurityException se) {
-			se.printStackTrace();
-		}
-	}
+	
 	
 	public static void main(String[] args) throws IOException {
 		// UDP Receiver stuff
-		BP_machine machine = new BP_machine("Ward 3","230.0.0.2", 4444);
 		System.out.println("Awating Patient");
-		
+		BP_machine machine = new BP_machine("Ward 3","230.0.0.1", 4444);
+		Thread k = new Thread(machine);
+		k.start();
+		}
+
 	}
-}
