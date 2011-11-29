@@ -48,7 +48,7 @@ public class Patient implements Runnable {
 		noDeviceFound = true;
 		multicastPort = 4444;
 		try {
-			multicastAddress = InetAddress.getByName("230.0.0.1");
+			multicastAddress = InetAddress.getByName("230.0.0.2");
 			socket = new MulticastSocket();
 			socket.joinGroup(multicastAddress);
 		} catch (UnknownHostException e1) {
@@ -124,17 +124,20 @@ public class Patient implements Runnable {
 			} else {
 				if (tests.contains(testName)) {
 					System.out.println(patientID + " needs this test");
+					String ip = event.getInfo().getHostAddress();
+					int port = event.getInfo().getPort();
 					try {
-						machine aMachine = (machine) Naming.lookup("//localHost/" + testName);
-						System.out.println("Patient "+patientID+" has got a test: "+ testName);
-						aMachine.completeTask();
-					} catch (MalformedURLException e) {
+						Socket toServer = new Socket(ip, port);
+						PrintWriter printer = new PrintWriter(toServer.getOutputStream(), true);
+						printer.println(patientID);
+						printer.flush();
+						toServer.close();
+					} catch (UnknownHostException e) {
 						e.printStackTrace();
-					} catch (RemoteException e) {
-						e.printStackTrace();
-					} catch (NotBoundException e) {
+					} catch (IOException e) {
 						e.printStackTrace();
 					}
+					
 				} else {
 					System.out.println(patientID + " doesn't need this test");
 				}
