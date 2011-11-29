@@ -53,10 +53,6 @@ public class PatientMeasuerment {
 
 	}
 	
-
-
-
-
 	private void useServiceAvailable(String host,int port){
 		serverHost=host;
 		serverPort=port;
@@ -74,7 +70,7 @@ public class PatientMeasuerment {
 		
 		String message="<?xml version=\"1.0\"?>\n" +
 		 "<patient_measurement>\n"+
-		 	"<patient_id>dd</patient_id>\n"+
+		 	"<patient_id>8</patient_id>\n"+
 		 	"<blood_pressure> 65</blood_pressure>\n"+		 	
 		 "</patient_measurement>\n"+
 		"<xml_end>MessageEnd</xml_end>";
@@ -85,7 +81,7 @@ public class PatientMeasuerment {
 		
 			try {
 				jmdns.close();
-			} catch (IOException e) {System.out.println(e);	}		
+			} catch (Exception e) {System.out.println(e);	}		
         
 	}
 	
