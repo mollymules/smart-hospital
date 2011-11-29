@@ -14,7 +14,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
-
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 
@@ -33,19 +32,26 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 	private Socket toServer;
 	private JmDNS jmdns;
 
-	private String patientWard = null;
+	private String patientWard;
 	private String Ward;
-	LinkedList<String> recentPatients = new LinkedList<String>();
+	LinkedList<String> recentPatients;
 
-	private String patientID =null;
-	private String bp_Result = "";
-	protected MulticastSocket socket = null;
+	private String patientID;
+	String bp_Result;
+	protected MulticastSocket socket;
 	protected InetAddress multicastAddress;
 	boolean UDPin;
 
 	public BP_machine(String location) throws RemoteException{
 		Ward = location;
 		UDPin = true;
+		bp_Result = "";
+		patientID =null;
+		socket = null;
+		recentPatients = new LinkedList<String>();
+		patientWard = null;
+		foundserv = false;
+		SERVICENAME = "hospitalserver";
 	}
 
 	public void UDPReceiver(String multicastGroup, int multiCastPort) {
@@ -110,15 +116,17 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 	}
 	
 	public void completeTask() {
-		// TODO How ever we are going to represent each machine
-
 		int top_Number = 70 + (int) (Math.random() * ((160 - 70) + 1));
 		int bottem_Number = 50 + (int) (Math.random() * ((100 - 50) + 1));
-
 		String top_Result = Integer.toString(top_Number);
 		String bottem_Result = Integer.toString(bottem_Number);
-
 		this.bp_Result = top_Result + "/" + bottem_Result;
+		try {
+			connectAvailServer();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public String getResults() {
@@ -134,23 +142,16 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 			ServiceInfo info = ServiceInfo.create(SERVICE_TYPE, SERVICE_NAME,SERVICE_PORT, 0, 0, ""+patientID);
 			jmdns.registerService(info);
 
-			Registry registry = LocateRegistry.createRegistry(1099);
+			Registry registry = LocateRegistry.createRegistry(87);
 			Naming.rebind("BloodPressure", new BP_machine("Ward 3"));
 			System.out.println("BP machine is ready");
-			completeTask();
 			//Add to a List of seen patients
 			recentPatients.add(patientID);
 			System.out.println("Patient " + patientID + " Added to History");
-			
-			//connectAvailServer();
-
-			//jmdns.close();
-			//System.exit(0);
-			System.out.println("Registered Service as " + info);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
-			System.out.println("Reposit Server failed: " + e);
+			System.out.println("Machine Server failed: " + e);
 		}
 	}
 	public void unReg(JmDNS jmdns, ServiceInfo info) {
