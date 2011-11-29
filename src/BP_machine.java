@@ -15,6 +15,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
+import javax.swing.JOptionPane;
 
 
 public class BP_machine extends UnicastRemoteObject implements machine, Runnable {
@@ -96,7 +97,7 @@ public class BP_machine extends UnicastRemoteObject implements machine, Runnable
 				String[] temp = input.split("_");
 				this.patientID = temp[0];
 				this.patientWard = temp[1];
-				recentPatients.add(patientID);
+				
 				// break. Start broadcasting
 				if (myLocation.equals(patientWard) && !recentPatients.contains(patientID)) {
 					System.out.println("Patient " + patientID + " In myLocation :" + patientWard);
@@ -126,11 +127,17 @@ public class BP_machine extends UnicastRemoteObject implements machine, Runnable
 			String reply = dd.sendMessageFromGui("<?xml version=\"1.0\"?>\n" +
 		"<patient_measurement>\n"+
 		"<patient_id>"+patientID+"</patient_id>\n"+
-		"<blood_pressure>70/86</blood_pressure>\n"+		 	
+		"<blood_pressure>"+bp_Result+"</blood_pressure>\n"+	
+		"<ward>"+patientWard+"</ward>\n"+
 		"</patient_measurement>\n"+
 		"<xml_end>MessageEnd</xml_end>");
+			recentPatients.add(patientID);
+			
 			
 			System.out.println(reply);
+			if(!reply.contains("OK")){
+				JOptionPane.showMessageDialog(null, "Error sending message to sever, ");
+			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
