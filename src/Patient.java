@@ -1,12 +1,6 @@
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.util.LinkedList;
 import java.io.*;
 import java.net.*;
-
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceListener;
@@ -38,6 +32,7 @@ public class Patient implements Runnable {
 		noDeviceFound = true;
 		tests = new LinkedList<String>();
 		tests.add("XRay");
+		multicastPort = 4443;
 	}
 
 	/*
@@ -45,10 +40,16 @@ public class Patient implements Runnable {
 	 * location every half a second.
 	 */
 	public void startBroadcast() {
+		System.out.println("Patient "+ patientID);
 		noDeviceFound = true;
-		multicastPort = 4444;
+		if(multicastPort < 4451){
+			multicastPort += 1;
+		}
+		else{
+			multicastPort = 4444;
+		}	
 		try {
-			multicastAddress = InetAddress.getByName("230.0.0.2");
+			multicastAddress = InetAddress.getByName("230.0.0.1");
 			socket = new MulticastSocket();
 			socket.joinGroup(multicastAddress);
 		} catch (UnknownHostException e1) {
@@ -73,7 +74,6 @@ public class Patient implements Runnable {
 	public void send() {
 		try {
 			String msg = "" + patientID + "_" + location;
-			System.out.println(msg);
 			byte[] buf = msg.getBytes();
 			DatagramPacket packet = new DatagramPacket(buf, buf.length,
 					multicastAddress, multicastPort);
@@ -94,6 +94,9 @@ public class Patient implements Runnable {
 
 	public LinkedList<String> getTests() {
 		return tests;
+	}
+	public void addTest(String t) {
+		tests.add(t);
 	}
 
 	class SampleListener implements ServiceListener {
@@ -149,16 +152,5 @@ public class Patient implements Runnable {
 	public void run() {
 		this.startListener();
 		this.startBroadcast();
-	}
-
-	public static void main(String[] args){
-		//Patient a = new Patient(1, "Ward 1");
-		Patient b = new Patient(2, "Ward 3");
-		b.tests.add("BloodPressure");
-		//Thread j = new Thread(a);
-		Thread k = new Thread(b);
-		//j.start();
-		k.start();
-
 	}
 }
