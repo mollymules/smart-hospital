@@ -4,6 +4,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.MulticastSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -42,7 +43,7 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 	protected InetAddress multicastAddress;
 	boolean UDPin;
 
-	public BP_machine(String location) throws RemoteException{
+	public BP_machine(String location) throws RemoteException, MalformedURLException{
 		Ward = location;
 		UDPin = true;
 		bp_Result = "";
@@ -52,6 +53,9 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		patientWard = null;
 		foundserv = false;
 		SERVICENAME = "hospitalserver";
+		
+		
+		//Add to a List of seen patients
 	}
 
 	public void UDPReceiver(String multicastGroup, int multiCastPort) {
@@ -142,10 +146,7 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 			ServiceInfo info = ServiceInfo.create(SERVICE_TYPE, SERVICE_NAME,SERVICE_PORT, 0, 0, ""+patientID);
 			jmdns.registerService(info);
 
-			Registry registry = LocateRegistry.createRegistry(87);
-			Naming.rebind("BloodPressure", new BP_machine("Ward 3"));
-			System.out.println("BP machine is ready");
-			//Add to a List of seen patients
+			
 			recentPatients.add(patientID);
 			System.out.println("Patient " + patientID + " Added to History");
 		} catch (IOException e) {
@@ -238,6 +239,10 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		String strMulticastPort = "4444";
 		System.out.println("Awating Patient");
 		machine.UDPReceiver(multicastGroup, Integer.parseInt(strMulticastPort));
+		
+		Registry reg = LocateRegistry.createRegistry(1099);
+		Naming.rebind("BloodPressure", machine);
+		System.out.println("BP machine is ready");
 		
 		
 		
