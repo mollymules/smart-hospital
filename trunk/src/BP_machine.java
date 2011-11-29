@@ -6,6 +6,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.MulticastSocket;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.rmi.Naming;
@@ -30,6 +31,8 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 	private int serverPort;
 	private boolean foundserv=false;
 	private String  SERVICENAME="hospitalserver";
+	
+	
 	private Socket toServer;
 	private JmDNS jmdns;
 
@@ -216,8 +219,6 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 			String reply=null;			 
 			while((reply=in.readLine())!=null) System.out.println("Responce from Server" + reply);
 		} catch (Exception e) {System.err.println("Sorry Iterator Interupted");}
-
-
 		try{
 			// tidy up
 			out.close();
@@ -230,20 +231,62 @@ public class BP_machine extends UnicastRemoteObject implements machine {
 		}
 
 	}
+	public void TCPSocketServer(int a_port) {
+	      try {
+	         ServerSocket my_serverSocket = new ServerSocket(a_port, my_backlog);
+	         System.out.println("TCP socket listening on port " + a_port);
+	      } catch (IOException ioe) {
+	         ioe.printStackTrace();
+	      } catch (SecurityException se) {
+	         se.printStackTrace();
+	      }
+	   }
+	
+	public void listen() {
+	      while (true) {
+	         try {
+	            // Listens for a connection to be made to this socket.
+	            Socket socket = my_serverSocket.accept();
 
+	            // Wrap a buffered reader round the socket input stream.
+	            // Read the javadoc to understand why we do this rather than dealing
+	            // with reading from raw sockets.
+	            BufferedReader in = new BufferedReader(new InputStreamReader(socket
+	                  .getInputStream()));
+
+	            // Read in the message
+	            String msg = in.readLine();
+
+	            // Print the message to the console
+	            System.out.println("Recceived message: " + msg);
+
+	            // EXERCISE: Instead of printing out client messages to the console:
+	            // 1. Construct a response in the form "Your message is: <message>".
+	            // 2. Send the response back to the client.
+
+	            // tidy up
+	            in.close();
+	            socket.close();
+	         } catch (IOException ioe) {
+	            ioe.printStackTrace();
+	         } catch (SecurityException se) {
+	            se.printStackTrace();
+	         }
+	      }
+	   }
+	
 	public static void main(String[] args) throws IOException {
 
 		// UDP Receiver stuff
 		BP_machine machine = new BP_machine("Ward 3");
-		String multicastGroup = "230.0.0.1";
+		String multicastGroup = "230.0.0.2";
 		String strMulticastPort = "4444";
 		System.out.println("Awating Patient");
 		machine.UDPReceiver(multicastGroup, Integer.parseInt(strMulticastPort));
 		
-		Registry reg = LocateRegistry.createRegistry(1099);
-		Naming.rebind("BloodPressure", machine);
-		System.out.println("BP machine is ready");
-		
+		 int port = 1099;
+         TCPSocketServer server = new TCPSocketServer(port);
+         server.listen();
 		
 		
 	}
