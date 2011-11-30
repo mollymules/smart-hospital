@@ -47,6 +47,8 @@ public class BP_machine extends UnicastRemoteObject implements machine, Runnable
 	protected InetAddress multicastAddress;
 	private DoctorDisplay dd;
 
+	
+	//Constructer for starting the machine,(Broadcasting)
 	public BP_machine(String location, String add, int multiPort) throws RemoteException, MalformedURLException{
 		try {
 			dd = new DoctorDisplay();
@@ -123,6 +125,11 @@ public class BP_machine extends UnicastRemoteObject implements machine, Runnable
 		String bottem_Result = Integer.toString(bottem_Number);
 		this.bp_Result = top_Result + "/" + bottem_Result;
 		System.out.println("Results Called");
+		sendServer(patientID);
+		
+	}
+	
+	public void sendServer(String patientID){
 		try {
 			String reply = dd.sendMessageFromGui("<?xml version=\"1.0\"?>\n" +
 		"<patient_measurement>\n"+
@@ -132,8 +139,7 @@ public class BP_machine extends UnicastRemoteObject implements machine, Runnable
 		"</patient_measurement>\n"+
 		"<xml_end>MessageEnd</xml_end>");
 			recentPatients.add(patientID);
-			
-			
+		
 			System.out.println(reply);
 			if(!reply.contains("OK")){
 				JOptionPane.showMessageDialog(null, "Error sending message to sever, ");
@@ -142,6 +148,7 @@ public class BP_machine extends UnicastRemoteObject implements machine, Runnable
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 	}
 
 	public String getResults() {
