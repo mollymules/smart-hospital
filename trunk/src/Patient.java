@@ -31,7 +31,6 @@ public class Patient implements Runnable {
 		location = ward;
 		noDeviceFound = true;
 		tests = new LinkedList<String>();
-		tests.add("XRay");
 		multicastPort = 4443;
 	}
 
@@ -40,7 +39,7 @@ public class Patient implements Runnable {
 	 * location every half a second.
 	 */
 	public void startBroadcast() {
-		System.out.println("Patient "+ patientID);
+		System.out.println("patient "+patientID+"broadcasting");
 		noDeviceFound = true;
 		if(multicastPort < 4451){
 			multicastPort += 1;
@@ -68,7 +67,6 @@ public class Patient implements Runnable {
 			} catch (InterruptedException e) {
 			}
 		}
-		System.out.println("broadcast has stopped");
 	}
 
 	public void send() {
