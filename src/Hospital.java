@@ -16,15 +16,19 @@ public class Hospital {
 		for(int i = 0; i< numPatients; i++){
 			createPatient(i);
 		}
-/*		try {
-			bp1 = new BP_machine("Ward 1","230.0.0.2", 4444);
+			try {
+				bp1 = new BP_machine("Ward 1","230.0.0.1", 4444);
+				
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (MalformedURLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			Thread t = new Thread(bp1);
 			t.start();
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		}*/
+			System.out.println("macjhine");
 	}
 	
 	public void createPatient(int i){
@@ -33,11 +37,11 @@ public class Hospital {
 		m.addTest(addTest());
 		Thread k = new Thread(m);
 		k.start();
-		System.out.println("Patient "+i+" is in "+ ward);
+		System.out.println("Patient "+i+" is in "+ ward +" and needs test "+m.getTests().toString());
 	}
 	
 	public String addTest(){
-		String test = allTests.get((int)Math.random()*allTests.size());
+		String test = allTests.get((int)(Math.random()*allTests.size()));
 		return test;
 	}
 	
